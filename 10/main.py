@@ -5,14 +5,12 @@ import sys
 from time import sleep, perf_counter as pc
 from os import system
 
-# Function getPointsBetween by @antooro
+# Function getPointsBetween by @antooro used for animation
 # https://raw.githubusercontent.com/antooro/advent-of-code-2019/master/day10/day10.py
-# is a really fast way to solve part 1 (1.59s on my i7)
-# my first aproach took 47s with 3 nested loops
 
 ANIMATION  = True
 LINUX      = True
-DELAY      = 0.2
+DELAY      = 0.01
 INPUT_FILE = "input"
 
 class P():
@@ -120,7 +118,7 @@ class AsteroidMap():
 
 
     def colorBetween(self, A,B, color):
-        for p in list(self.getPointsBetween(A,B)) + [A,B]:
+        for p in list(self.getPointsBetween(A,B)) + [B]:
             printable = '#' if '#' in self.area[p.y][p.x] else '.'
             self.area[p.y][p.x] = f'\033[{color}m{printable}\033[0m' 
 
@@ -137,7 +135,7 @@ class AsteroidMap():
         return visionRange
     
     def countViews(self, nearby):
-        return len(self.myView(nearby))
+        return len(set([self.angle(nearby, a) for a in self.asteroids if a!=nearby]))
 
 command = "clear" if LINUX else "cls"
 
@@ -158,7 +156,7 @@ for asteroid in AM.asteroids:
     if v > best[0]:
         best = [v, asteroid]
 print("total", pc()-tot)
-
+print(best)
 # Part 2
 
 location = best[-1]
@@ -166,19 +164,24 @@ AM.setStation(location)
 myView = AM.myView(location)
 info = sorted(AM.getDegNearbyOf(location), key=lambda x: x[0])
 counter = 0
-print(AM)
+if ANIMATION: print(AM)
+res = None
 while len(myView) > 0:
     
     for i in info:
         asteroid = i[-1]
         if asteroid in myView:
             counter+=1
-            if(counter==200): print("WIN", asteroid, "result: ", asteroid.x*100+asteroid.y)
+            if(counter==200):
+                print("WIN", asteroid, "result: ", asteroid.x*100+asteroid.y)
+                res = asteroid.x*100+asteroid.y
             if ANIMATION:
                 AM.colorBetween(location, asteroid, 31)
                 system(command)
                 print(AM)
-                sleep(0.2)
+                print("PART 1:", *best)
+                if res != None: print("PART 2: ",res)
+                sleep(DELAY)
                 AM.colorBetween(location, asteroid, 0)
             AM.destroy(asteroid)
             
@@ -186,4 +189,10 @@ while len(myView) > 0:
     myView = AM.myView(location)
     info = sorted(AM.getDegNearbyOf(location), key=lambda x: x[0])
 
-print("END")
+if ANIMATION:
+    AM.area[location.y][location.x] = "\033[5m\033[32m#\033[0m"
+    system(command)
+    print(AM)
+    print("PART 1:", *best)
+
+print("PART 2:", res)
