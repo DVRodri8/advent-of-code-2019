@@ -10,7 +10,7 @@ from os import system
 
 ANIMATION  = True
 LINUX      = True
-DELAY      = 0.01
+DELAY      = 0.06
 INPUT_FILE = "input"
 
 class P():
@@ -134,31 +134,30 @@ class AsteroidMap():
 
         return visionRange
     
-    def countViews(self, nearby):
-        return len(set([self.angle(nearby, a) for a in self.asteroids if a!=nearby]))
+    def countViews(self, asteroid):
+        return len(set([self.angle(asteroid, a) for a in self.asteroids if a!=asteroid]))
 
 command = "clear" if LINUX else "cls"
 
 area = []
-with open("input", "r") as f:
+with open(INPUT_FILE, "r") as f:
     for i in f.readlines():
         area.append([a for a in i.strip()])
 
 best = [-1, []]
 
 # Part 1
-AM = AsteroidMap(area)
 tot = pc()
-nearby = 0
-couvw = 0
+AM = AsteroidMap(area)
 for asteroid in AM.asteroids:
     v=AM.countViews(asteroid)
     if v > best[0]:
         best = [v, asteroid]
-print("total", pc()-tot)
-print(best)
-# Part 2
+print("Part 1:", best[1], "     result:", best[0])
+l = len(str(best[1])) + 4
 
+# Part 2
+tot = pc()
 location = best[-1]
 AM.setStation(location)
 myView = AM.myView(location)
@@ -173,7 +172,10 @@ while len(myView) > 0:
         if asteroid in myView:
             counter+=1
             if(counter==200):
-                print("WIN", asteroid, "result: ", asteroid.x*100+asteroid.y)
+                if not ANIMATION:
+                    spaces = " "*(l-len(str(asteroid)))
+                    print("Part 2:", asteroid, spaces, "result:", asteroid.x*100+asteroid.y)
+                    sys.exit()
                 res = asteroid.x*100+asteroid.y
             if ANIMATION:
                 AM.colorBetween(location, asteroid, 31)
